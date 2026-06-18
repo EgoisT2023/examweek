@@ -39,16 +39,6 @@ tab2.TextScaled = true
 tab2.Font = Enum.Font.GothamBold
 tab2.Parent = mainFrame
 
-local tab3 = Instance.new("TextButton")
-tab3.Size = UDim2.new(0, 110, 0, 30)
-tab3.Position = UDim2.new(0, 240, 0, 40)
-tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-tab3.Text = "Buy Items"
-tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
-tab3.TextScaled = true
-tab3.Font = Enum.Font.GothamBold
-tab3.Parent = mainFrame
-
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 30, 0, 30)
 closeButton.Position = UDim2.new(1, -35, 0, 5)
@@ -142,14 +132,18 @@ local function StartBoxFarm()
     boxCoroutine = task.spawn(function()
         while runningBox do
             pcall(function()
-                local boxPrompt = workspace:FindFirstChild("BoxPrompt")
+                local boxPrompt = workspace:FindFirstChild("World"):FindFirstChild("BoxPrompt")
                 if boxPrompt then
                     local proximityPrompt = boxPrompt:FindFirstChild("ProximityPrompt")
                     if proximityPrompt then
                         local character = player.Character
                         local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                         if humanoidRootPart then
-                            humanoidRootPart.CFrame = boxPrompt.CFrame + Vector3.new(0, 3, 0)
+                            local distance = (humanoidRootPart.Position - boxPrompt.Position).Magnitude
+                            if distance > 10 then
+                                humanoidRootPart.CFrame = boxPrompt.CFrame + Vector3.new(0, 3, 0)
+                                task.wait(0.1)
+                            end
                             fireproximityprompt(proximityPrompt)
                         end
                     end
@@ -164,6 +158,11 @@ local function StartBoxFarm()
                         local character = player.Character
                         local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
                         if humanoidRootPart then
+                            local distance = (humanoidRootPart.Position - boxEvent.Position).Magnitude
+                            if distance > 10 then
+                                humanoidRootPart.CFrame = boxEvent.CFrame + Vector3.new(0, 3, 0)
+                                task.wait(0.1)
+                            end
                             firetouchinterest(humanoidRootPart, boxEvent, 0)
                             firetouchinterest(humanoidRootPart, boxEvent, 1)
                         end
@@ -272,60 +271,11 @@ local function CreateTab2()
     end)
 end
 
-local function CreateTab3()
-    ClearContainer()
-    
-    local items = {
-        "Sparkle Dumpling", "Glitter Whale", "Galactic Unicorn",
-        "Glitter Octopus", "Glitter Dumpling", "Glitter Crab",
-        "Supernova Bear", "Glitter Clownfish", "Glitter Axolotl",
-        "Glitter Smores", "Glitter Gingerbread"
-    }
-    
-    local scrollingFrame = Instance.new("ScrollingFrame")
-    scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollingFrame.BackgroundTransparency = 1
-    scrollingFrame.ScrollBarThickness = 8
-    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #items * 55)
-    scrollingFrame.Parent = container
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 5)
-    listLayout.Parent = scrollingFrame
-    
-    for _, itemName in ipairs(items) do
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, 0, 0, 45)
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        button.Text = "Buy " .. itemName
-        button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        button.TextScaled = true
-        button.Font = Enum.Font.GothamBold
-        button.Parent = scrollingFrame
-        
-        button.MouseButton1Click:Connect(function()
-            local args = {
-                "Buy",
-                itemName
-            }
-            game:GetService("ReplicatedStorage"):WaitForChild("Cosmos"):WaitForChild("Services"):WaitForChild("MerchantService"):WaitForChild("Remotes"):WaitForChild("TaskEvent"):FireServer(unpack(args))
-            
-            button.Text = "Bought!"
-            button.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-            task.wait(0.3)
-            button.Text = "Buy " .. itemName
-            button.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-        end)
-    end
-end
-
 tab1.MouseButton1Click:Connect(function()
     tab1.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
     tab1.TextColor3 = Color3.fromRGB(255, 255, 255)
     tab2.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
     tab2.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
     CreateTab1()
 end)
 
@@ -334,19 +284,7 @@ tab2.MouseButton1Click:Connect(function()
     tab2.TextColor3 = Color3.fromRGB(255, 255, 255)
     tab1.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
     tab1.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
     CreateTab2()
-end)
-
-tab3.MouseButton1Click:Connect(function()
-    tab3.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-    tab3.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tab1.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab1.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tab2.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab2.TextColor3 = Color3.fromRGB(200, 200, 200)
-    CreateTab3()
 end)
 
 CreateTab1()

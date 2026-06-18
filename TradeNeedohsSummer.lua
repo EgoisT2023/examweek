@@ -20,7 +20,7 @@ title.Font = Enum.Font.GothamBold
 title.Parent = mainFrame
 
 local tab1 = Instance.new("TextButton")
-tab1.Size = UDim2.new(0, 110, 0, 30)
+tab1.Size = UDim2.new(0, 100, 0, 30)
 tab1.Position = UDim2.new(0, 10, 0, 40)
 tab1.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
 tab1.Text = "Pass Farm"
@@ -30,14 +30,24 @@ tab1.Font = Enum.Font.GothamBold
 tab1.Parent = mainFrame
 
 local tab2 = Instance.new("TextButton")
-tab2.Size = UDim2.new(0, 110, 0, 30)
-tab2.Position = UDim2.new(0, 125, 0, 40)
+tab2.Size = UDim2.new(0, 100, 0, 30)
+tab2.Position = UDim2.new(0, 115, 0, 40)
 tab2.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 tab2.Text = "Box Farm"
 tab2.TextColor3 = Color3.fromRGB(200, 200, 200)
 tab2.TextScaled = true
 tab2.Font = Enum.Font.GothamBold
 tab2.Parent = mainFrame
+
+local tab3 = Instance.new("TextButton")
+tab3.Size = UDim2.new(0, 100, 0, 30)
+tab3.Position = UDim2.new(0, 220, 0, 40)
+tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+tab3.Text = "Mop Farm"
+tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
+tab3.TextScaled = true
+tab3.Font = Enum.Font.GothamBold
+tab3.Parent = mainFrame
 
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 30, 0, 30)
@@ -92,8 +102,10 @@ end
 
 local runningPass = false
 local runningBox = false
+local runningMop = false
 local passCoroutine = nil
 local boxCoroutine = nil
+local mopCoroutine = nil
 
 local function StartPassFarm()
     runningPass = true
@@ -180,6 +192,71 @@ local function StopBoxFarm()
     if boxCoroutine then
         task.cancel(boxCoroutine)
         boxCoroutine = nil
+    end
+end
+
+local function StartMopFarm()
+    runningMop = true
+    mopCoroutine = task.spawn(function()
+        local hasMop = false
+        
+        while runningMop do
+            if not hasMop then
+                pcall(function()
+                    local getMop = workspace:FindFirstChild("World"):FindFirstChild("Get Mop")
+                    if getMop then
+                        local proximityPrompt = getMop:FindFirstChild("ProximityPrompt")
+                        if proximityPrompt then
+                            local character = player.Character
+                            local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                            if humanoidRootPart then
+                                humanoidRootPart.CFrame = getMop.CFrame + Vector3.new(0, 3, 0)
+                                task.wait(0.3)
+                                fireproximityprompt(proximityPrompt)
+                                task.wait(0.3)
+                                fireproximityprompt(proximityPrompt)
+                                hasMop = true
+                            end
+                        end
+                    end
+                end)
+            end
+            
+            pcall(function()
+                local puddles = workspace:FindFirstChild("World"):FindFirstChild("Puddles")
+                if puddles then
+                    local children = puddles:GetChildren()
+                    for i, puddle in ipairs(children) do
+                        if not runningMop then break end
+                        if i >= 2 then
+                            local proximityPrompt = puddle:FindFirstChild("ProximityPrompt")
+                            if proximityPrompt and puddle:IsA("BasePart") then
+                                local character = player.Character
+                                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+                                if humanoidRootPart then
+                                    humanoidRootPart.CFrame = puddle.CFrame + Vector3.new(0, 3, 0)
+                                    task.wait(0.1)
+                                    fireproximityprompt(proximityPrompt)
+                                    task.wait(0.1)
+                                    fireproximityprompt(proximityPrompt)
+                                    task.wait(0.1)
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+            
+            task.wait(0.5)
+        end
+    end)
+end
+
+local function StopMopFarm()
+    runningMop = false
+    if mopCoroutine then
+        task.cancel(mopCoroutine)
+        mopCoroutine = nil
     end
 end
 
@@ -271,11 +348,57 @@ local function CreateTab2()
     end)
 end
 
+local function CreateTab3()
+    ClearContainer()
+    
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(1, 0, 0, 50)
+    statusLabel.Position = UDim2.new(0, 0, 0, 0)
+    statusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    statusLabel.Text = "Stopped"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusLabel.TextScaled = true
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.Parent = container
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(1, 0, 0, 45)
+    toggleButton.Position = UDim2.new(0, 0, 0, 70)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    toggleButton.Text = "Start"
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.TextScaled = true
+    toggleButton.Font = Enum.Font.GothamBold
+    toggleButton.Parent = container
+    
+    local isRunning = false
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        if isRunning then
+            StopMopFarm()
+            isRunning = false
+            toggleButton.Text = "Start"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+            statusLabel.Text = "Stopped"
+            statusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+        else
+            StartMopFarm()
+            isRunning = true
+            toggleButton.Text = "Stop"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+            statusLabel.Text = "Running..."
+            statusLabel.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+        end
+    end)
+end
+
 tab1.MouseButton1Click:Connect(function()
     tab1.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
     tab1.TextColor3 = Color3.fromRGB(255, 255, 255)
     tab2.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
     tab2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
     CreateTab1()
 end)
 
@@ -284,7 +407,19 @@ tab2.MouseButton1Click:Connect(function()
     tab2.TextColor3 = Color3.fromRGB(255, 255, 255)
     tab1.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
     tab1.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tab3.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    tab3.TextColor3 = Color3.fromRGB(200, 200, 200)
     CreateTab2()
+end)
+
+tab3.MouseButton1Click:Connect(function()
+    tab3.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+    tab3.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tab1.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    tab1.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tab2.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
+    tab2.TextColor3 = Color3.fromRGB(200, 200, 200)
+    CreateTab3()
 end)
 
 CreateTab1()
